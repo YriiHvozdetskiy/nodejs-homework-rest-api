@@ -8,10 +8,7 @@ const {
   PORT = 3000
 } = process.env
 
-mongoose.connect(DB_HOST, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
+mongoose.connect(DB_HOST)
   .then(() => app.listen(PORT))
   .catch(error => {
     console.log(error.message)
