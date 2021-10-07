@@ -1,21 +1,15 @@
 const { NotFound } = require('http-errors')
 const { sendSuccessRes } = require('../helpers')
-const {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateContactById,
-} = require('../model')
+const { Contact } = require('../models')
 
 const getAll = async (req, res) => {
-  const data = await listContacts()
-  sendSuccessRes(res, data)
+  const data = await Contact.find({}, 'name favorite phone email') // можем вибирати які поля повернути
+  sendSuccessRes(res, { data })
 }
 
 const getById = async (req, res) => {
   const { contactId } = req.params
-  const data = await getContactById(contactId)
+  const data = await Contact.findById(contactId, 'name favorite phone email') // можем вибирати які поля повернути
   if (!data) {
     throw new NotFound(`id=${contactId} Not Found`) // NotFound повертає з ліби 404 помилку і наш вложений текст
   }
@@ -23,26 +17,36 @@ const getById = async (req, res) => {
 }
 
 const add = async (req, res) => {
-  const data = await addContact(req.body)
-  sendSuccessRes(res, data, 201) // обгортка над успішною відповідю
+  const data = await Contact.create(req.body)
+  sendSuccessRes(res, data, 201)
 }
 
 const updateById = async (req, res) => {
   const { contactId } = req.params
-  const result = await updateContactById(contactId, req.body)
+  const result = await Contact.findByIdAndUpdate(contactId, req.body, { new: true }) // що обновити , нащо обновити, повертає обновлений обєкт
   if (!result) {
-    throw new NotFound(`Product with id=${contactId} not found`) // NotFound повертає з ліби 404 помилку і наш вложений текст
+    throw new NotFound(`Contact with id=${contactId} not found`)
   }
-  sendSuccessRes(res, { result }) // обгортка над успішною відповідю
+  sendSuccessRes(res, { result })
 }
 
 const removeById = async (req, res) => {
   const { contactId } = req.params
-  const result = await removeContact(contactId)
+  const result = await Contact.findByIdAndDelete(contactId)
   if (!result) {
-    throw new NotFound(`Contact with id=${contactId} Not Found`) // NotFound повертає з ліби 404 помилку і наш вложений текст
+    throw new NotFound(`Contact with id=${contactId} Not Found`)
   }
-  sendSuccessRes(res, { message: 'contact deleted' }) // обгортка над успішною відповідю
+  sendSuccessRes(res, { message: 'contact deleted' })
+}
+
+const updateStatusContact = async (req, res) => {
+  const { contactId } = req.params
+  const { favorite } = req.body
+  const result = await Contact.findByIdAndUpdate(contactId, { favorite }, { new: true }) // оновлення контакта тільки по полю favorite
+  if (!result) {
+    throw new NotFound(`Contact with id=${contactId} not found`)
+  }
+  sendSuccessRes(res, { result })
 }
 
 module.exports = {
@@ -51,5 +55,6 @@ module.exports = {
   add,
   removeById,
   updateById,
+  updateStatusContact,
 
 }
